@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рулетка · Grow a Garden · Roblox</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: #4f8a4a;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+            padding: 20px;
+            margin: 0;
+            perspective: 800px;
+            background: transparent;
+        }
+
+        /* 3D-контейнер для фона */
+        .scene-3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            transform-style: preserve-3d;
+            transition: transform 0.08s ease-out;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+            background: #6da56a;
+        }
+
+        .garden-bg {
+            width: 100%;
+            height: 100%;
+            background: #6da56a;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 200, 0.25) 0%, transparent 35%),
+                radial-gradient(circle at 90% 70%, rgba(255, 230, 150, 0.25) 0%, transparent 35%),
+                repeating-linear-gradient(45deg, rgba(80, 130, 70, 0.12) 0px, rgba(80, 130, 70, 0.12) 4px, rgba(100, 160, 90, 0.12) 4px, rgba(100, 160, 90, 0.12) 8px),
+                linear-gradient(145deg, #4f8a4a 0%, #6db068 50%, #4a7e45 100%);
+            box-shadow: inset 0 0 80px rgba(0, 40, 0, 0.4);
+            position: relative;
+            transform: translateZ(0) scale(1.15);
+        }
+
+        .garden-bg::before {
+            content: "🌷🌻🌼🌱🌿🌾🌺";
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            font-size: 4rem;
+            letter-spacing: 50px;
+            opacity: 0.25;
+            pointer-events: none;
+            text-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            transform: rotate(-2deg) translateZ(0);
+        }
+
+        .garden-bg::after {
+            content: "☁️☁️☁️";
+            position: absolute;
+            top: 20px;
+            right: 10px;
+            font-size: 6rem;
+            opacity: 0.2;
+            pointer-events: none;
+            transform: scaleX(-1) translateZ(0);
+            filter: blur(1px);
+        }
+
+        .cloud-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .cloud-layer::before {
+            content: "☁️☁️";
+            position: absolute;
+            top: 60px;
+            left: 5%;
+            font-size: 5rem;
+            opacity: 0.15;
+            transform: rotate(-5deg);
+            filter: blur(2px);
+        }
+
+        .cloud-layer::after {
+            content: "☁️☁️☁️";
+            position: absolute;
+            bottom: 40px;
+            right: 3%;
+            font-size: 4.5rem;
+            opacity: 0.12;
+            transform: rotate(3deg);
+            filter: blur(2px);
+        }
+
+        /* главный блок */
+        .garden-card {
+            max-width: 860px;
+            width: 100%;
+            background: #73b06f;
+            background-image: radial-gradient(circle at 20% 30%, #8fcb8a, #4f8a4a);
+            padding: 25px 25px 35px;
+            border-radius: 70px 70px 90px 90px;
+            box-shadow: 0 16px 0 #2d5a28, 0 20px 30px rgba(0, 0, 0, 0.5), inset 0 -6px 0 #3f753a, inset 0 6px 10px #b8e6b3;
+            border: 6px solid #6aa565;
+            transition: transform 0.1s ease-out;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+            transform-style: preserve-3d;
+        }
+
+        /* ===== НОВАЯ ВЕРХНЯЯ ПАНЕЛЬ С СОХРАНЕНИЯМИ ===== */
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(255, 248, 220, 0.85);
+            padding: 12px 18px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            border: 3px solid #d4c88a;
+            box-shadow: 0 5px 0 #a89b60, inset 0 2px 8px #fffde0;
+        }
+
+        .top-bar .save-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .top-bar input[type="text"] {
+            padding: 8px 14px;
+            border-radius: 40px;
+            border: 3px solid #7e9f72;
+            font-size: 0.95rem;
+            background: #fafff7;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08), 0 3px 0 #4f7345;
+            font-weight: 600;
+            color: #1f3b1c;
+            min-width: 130px;
+            flex: 1;
+        }
+
+        .top-bar input[type="text"]:focus {
+            outline: 2px solid #f9e45b;
+        }
+
+        .btn-save {
+            background: #6fc76f;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1a3a17;
+            border: 3px solid #8fda8f;
+            box-shadow: 0 5px 0 #3d7a3d;
+            cursor: pointer;
+            transition: 0.05s linear;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-save:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #3d7a3d;
+        }
+
+        .btn-saved-list {
+            background: #fedb5f;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1f3b1c;
+            border: 3px solid #f5cd4a;
+            box-shadow: 0 5px 0 #b18b30;
+            cursor: pointer;
+            transition: 0.05s linear;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-saved-list:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #b18b30;
+        }
+
+        /* ===== МОДАЛЬНОЕ ОКНО СО СПИСКОМ СОХРАНЕНИЙ ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #f5f0cc;
+            max-width: 550px;
+            width: 90%;
+            max-height: 80vh;
+            border-radius: 60px;
+            padding: 30px 25px 25px;
+            border: 6px solid #e3d894;
+            box-shadow: 0 20px 0 #94854b, 0 20px 40px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-content h2 {
+            font-size: 1.8rem;
+            color: #1f3a1c;
+            text-align: center;
+            margin-bottom: 18px;
+            text-shadow: 2px 2px 0 #d4c88a;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 20px;
+            font-size: 2.2rem;
+            cursor: pointer;
+            color: #6d5a2a;
+            background: none;
+            border: none;
+            transition: 0.1s;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.2);
+        }
+
+        .saved-item {
+            background: #fef9d7;
+            padding: 14px 20px;
+            border-radius: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border: 3px solid #e5dc9a;
+            box-shadow: 0 4px 0 #b3a86a;
+            transition: 0.05s;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .saved-item .info {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1f3a1c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .saved-item .info .count {
+            background: #6ba85e;
+            color: #f9ffdd;
+            padding: 2px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            box-shadow: inset 0 -3px 0 #3f6f35;
+        }
+
+        .saved-item .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .saved-item .actions button {
+            border: none;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.05s;
+            font-size: 0.9rem;
+        }
+
+        .btn-load {
+            background: #6fc76f;
+            border: 3px solid #8fda8f;
+            box-shadow: 0 4px 0 #3d7a3d;
+            color: #1a3a17;
+        }
+
+        .btn-load:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #3d7a3d;
+        }
+
+        .btn-delete {
+            background: #e25a5a;
+            border: 3px solid #f07a7a;
+            box-shadow: 0 4px 0 #8f2f2f;
+            color: white;
+        }
+
+        .btn-delete:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #8f2f2f;
+        }
+
+        .empty-saves {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #5f7a58;
+            padding: 30px 0;
+        }
+
+        /* ===== остальные стили ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f3c5;
+            padding: 10px 22px;
+            border-radius: 100px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 0 #a09b6e, inset 0 3px 8px #fff6d0;
+            border: 3px solid #e5dc9a;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #2d4d2a;
+            text-shadow: 3px 3px 0 #b3d8a0, 0 2px 0 #1f3b1c;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span {
+            background: #ffd966;
+            padding: 0 14px;
+            border-radius: 60px;
+            font-size: 1.7rem;
+            box-shadow: inset 0 -4px 0 #b38f3a;
+        }
+
+        .roblox-icon {
+            background: #f5f5f5;
+            border-radius: 30px;
+            padding: 6px 18px 6px 14px;
+            font-weight: 700;
+            color: #1f3b1c;
+            border: 3px solid #bee0b9;
+            box-shadow: 0 4px 0 #6d8f68;
+            font-size: 1.1rem;
+        }
+
+        .add-panel {
+            background: #dcedc8;
+            padding: 18px 16px;
+            border-radius: 60px 60px 40px 40px;
+            background: #bbd9b3;
+            box-shadow: inset 0 4px 0 #9fb899, 0 8px 0 #43753e;
+            margin-bottom: 25px;
+            border: 3px solid #83a87d;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .add-panel input {
+            flex: 1 1 140px;
+            padding: 12px 16px;
+            border: 4px solid #628d5c;
+            border-radius: 60px;
+            font-size: 1rem;
+            background: #fafff7;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.1), 0 3px 0 #3a6135;
+            font-weight: 600;
+            color: #173014;
+            transition: 0.1s;
+        }
+
+        .add-panel input:focus {
+            outline: 2px solid #f9e45b;
+            background: #ffffff;
+        }
+
+        .add-panel input::placeholder {
+            color: #5f7a58;
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        .add-panel .file-wrapper {
+            position: relative;
+            flex: 1 1 100px;
+        }
+
+        .file-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-label {
+            background: #fedb5f;
+            padding: 10px 18px;
+            border-radius: 60px;
+            display: inline-block;
+            font-weight: 700;
+            color: #2c4d26;
+            border: 3px solid #f5cd4a;
+            box-shadow: 0 5px 0 #b18b30, inset 0 2px 10px #fff2b0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: 0.05s linear;
+        }
+
+        .file-label:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #b18b30;
+        }
+
+        .add-btn {
+            background: #5bbb5b;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #1f3b1c;
+            border: 4px solid #7fd47f;
+            box-shadow: 0 7px 0 #2d752d, inset 0 2px 12px #b0f0b0;
+            cursor: pointer;
+            transition: 0.08s linear;
+            text-shadow: 0 1px 0 #b1e6a1;
+            letter-spacing: 1px;
+            flex: 1 1 80px;
+        }
+
+        .add-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 2px 0 #2d752d;
+        }
+
+        .slot-list {
+            background: #487a42;
+            padding: 16px 10px 10px;
+            border-radius: 70px 70px 50px 50px;
+            background: #579a50;
+            box-shadow: inset 0 -6px 0 #2f602a, 0 10px 0 #2b5726;
+            border: 3px solid #6fb068;
+            margin-bottom: 25px;
+            min-height: 140px;
+        }
+
+        .items-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            min-height: 110px;
+            padding: 6px 8px;
+        }
+
+        .item-chip {
+            background: #fcf9e0;
+            padding: 10px 18px 10px 12px;
+            border-radius: 70px;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            border: 4px solid #f3e9b0;
+            box-shadow: 0 5px 0 #9f9763, inset 0 2px 6px #fffde8;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1c3a18;
+            background: #fef9d7;
+            transition: 0.1s;
+            backdrop-filter: blur(2px);
+        }
+
+        .item-chip img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #5d8a55;
+            background: #c7dbbd;
+            box-shadow: 0 3px 0 #375f31;
+        }
+
+        .item-chip .remove-btn {
+            background: #e25a5a;
+            border: none;
+            color: white;
+            font-weight: 900;
+            width: 28px;
+            height: 28px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: 2px solid #b13b3b;
+            box-shadow: 0 3px 0 #771f1f;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.05s;
+        }
+
+        .item-chip .remove-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 0px 0 #771f1f;
+        }
+
+        .empty-message {
+            color: #f3fad6;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-shadow: 3px 3px 0 #295325;
+            background: #5d9655;
+            padding: 16px 34px;
+            border-radius: 70px;
+            border: 3px dashed #b1ddab;
+        }
+
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .spin-btn {
+            background: #ffe066;
+            border: 6px solid #fad34a;
+            padding: 14px 46px;
+            border-radius: 120px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1d3b1a;
+            box-shadow: 0 12px 0 #b38f30, inset 0 4px 20px #fff3b0;
+            cursor: pointer;
+            transition: 0.08s linear;
+            width: 100%;
+            max-width: 300px;
+            text-shadow: 0 2px 0 #ecd57a;
+            letter-spacing: 3px;
+            margin-bottom: 22px;
+        }
+
+        .spin-btn:active {
+            transform: translateY(8px);
+            box-shadow: 0 4px 0 #b38f30;
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+            transform: translateY(5px);
+            box-shadow: 0 6px 0 #7a6520;
+            pointer-events: none;
+        }
+
+        .result-box {
+            background: #f5f0cc;
+            padding: 18px 30px;
+            border-radius: 100px;
+            border: 6px solid #e3d894;
+            box-shadow: inset 0 4px 10px #bbaa6a, 0 10px 0 #94854b;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1f3a1c;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 100px;
+            background: #fbf6cf;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-box.win-animation {
+            animation: winPop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+            background: #fff8b0;
+            border-color: #fad34a;
+            box-shadow: 0 0 40px #fcee8f, inset 0 4px 20px #fef7b0, 0 10px 0 #a08b3e;
+        }
+
+        @keyframes winPop {
+            0% {
+                transform: scale(0.8) rotate(-6deg);
+                opacity: 0.4;
+            }
+            40% {
+                transform: scale(1.12) rotate(3deg);
+                opacity: 1;
+            }
+            70% {
+                transform: scale(0.95) rotate(-2deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .result-box img {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 6px solid #87b37e;
+            background: #aacba0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 0 #4f7847;
+        }
+
+        .result-box.win-animation img {
+            animation: imagePop 0.6s ease 0.2s both;
+            border-color: #ffd966;
+            box-shadow: 0 0 30px #f7d44a, 0 4px 0 #b38f3a;
+        }
+
+        @keyframes imagePop {
+            0% {
+                transform: scale(0) rotate(-30deg);
+            }
+            60% {
+                transform: scale(1.3) rotate(8deg);
+            }
+            100% {
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        .result-text {
+            background: #3f7739;
+            padding: 8px 28px;
+            border-radius: 60px;
+            color: #f9ffdd;
+            text-shadow: 2px 2px 0 #174013;
+            box-shadow: inset 0 -5px 0 #23521e;
+            transition: all 0.2s ease;
+            font-size: 1.8rem;
+        }
+
+        .result-box.win-animation .result-text {
+            animation: textGlow 0.5s ease 0.3s both;
+        }
+
+        @keyframes textGlow {
+            0% {
+                transform: scale(0.8);
+                background: #5d9e54;
+                color: #fffec0;
+            }
+            50% {
+                transform: scale(1.15);
+                background: #7fc074;
+            }
+            100% {
+                transform: scale(1);
+                background: #3f7739;
+            }
+        }
+
+        .result-box.win-animation::before {
+            content: "✨⭐🌟✨⭐🌟";
+            position: absolute;
+            font-size: 2.5rem;
+            top: -20px;
+            left: -10px;
+            width: 120%;
+            height: 120%;
+            pointer-events: none;
+            animation: sparkles 0.9s linear forwards;
+            opacity: 0;
+            letter-spacing: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            transform: rotate(-10deg);
+        }
+
+        @keyframes sparkles {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) rotate(-20deg);
+            }
+            30% {
+                opacity: 1;
+                transform: scale(1.2) rotate(5deg);
+            }
+            70% {
+                opacity: 1;
+                transform: scale(1) rotate(-3deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5) rotate(15deg);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .garden-card {
+                padding: 14px 10px;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+                letter-spacing: 1px;
+            }
+            .header h1 span {
+                font-size: 1.2rem;
+                padding: 0 10px;
+            }
+            .roblox-icon {
+                font-size: 0.8rem;
+                padding: 4px 10px;
+            }
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                padding: 12px 14px;
+            }
+            .top-bar .save-group {
+                justify-content: center;
+            }
+            .top-bar input[type="text"] {
+                min-width: 100px;
+            }
+            .add-panel {
+                flex-direction: column;
+                gap: 8px;
+                padding: 14px 12px;
+            }
+            .add-panel input {
+                width: 100%;
+            }
+            .file-wrapper {
+                width: 100%;
+            }
+            .add-btn {
+                width: 100%;
+            }
+            .result-box {
+                font-size: 1rem;
+                padding: 14px 16px;
+                gap: 12px;
+                min-height: 80px;
+            }
+            .result-box img {
+                width: 50px;
+                height: 50px;
+            }
+            .result-text {
+                font-size: 1.2rem;
+                padding: 4px 16px;
+            }
+            .item-chip {
+                padding: 6px 12px 6px 8px;
+                font-size: 0.95rem;
+                gap: 10px;
+            }
+            .item-chip img {
+                width: 38px;
+                height: 38px;
+            }
+            .modal-content {
+                padding: 20px 16px;
+            }
+            .saved-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .saved-item .actions {
+                justify-content: flex-end;
+            }
+            .spin-btn {
+                font-size: 1.5rem;
+                padding: 12px 30px;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D-сцена для фона -->
+    <div class="scene-3d" id="scene3d">
+        <div class="garden-bg">
+            <div class="cloud-layer"></div>
+        </div>
+    </div>
+
+    <!-- Основная карточка -->
+    <div class="garden-card" id="gardenCard">
+        <!-- ВЕРХНЯЯ ПАНЕЛЬ С СОХРАНЕНИЯМИ -->
+        <div class="top-bar">
+            <div class="save-group">
+                <input type="text" id="configNameInput" placeholder="Название конфига" value="Моя рулетка">
+                <button class="btn-save" id="saveConfigBtn">💾 Сохранить</button>
+                <button class="btn-saved-list" id="showSavesBtn">📂 Сохранённые</button>
+            </div>
+        </div>
+
+        <div class="header">
+            <h1>
+                <span>🎡</span> РУЛЕТКА
+            </h1>
+            <div class="roblox-icon">⚡ Roblox style</div>
+        </div>
+
+        <div class="add-panel">
+            <input type="text" id="itemName" placeholder="Название" value="Подсолнух">
+            <div class="file-wrapper">
+                <input type="file" id="imageUpload" accept="image/*">
+                <span class="file-label" id="fileLabel">📸 Выбрать фото</span>
+            </div>
+            <button class="add-btn" id="addBtn">➕ Добавить</button>
+        </div>
+
+        <div class="slot-list">
+            <div class="items-grid" id="itemsGrid">
+                <div class="empty-message">🌻 Добавьте первый вариант</div>
+            </div>
+        </div>
+
+        <div class="action-area">
+            <button class="spin-btn" id="spinBtn">🌀 КРУТИТЬ</button>
+            <div class="result-box" id="resultBox">
+                <span style="color:#3a6433; font-size:1.8rem;">✨</span>
+                <span id="resultName" class="result-text">Ожидание</span>
+                <img id="resultImage" src="" alt="результат" style="display: none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО СО СПИСКОМ СОХРАНЕНИЙ -->
+    <div class="modal-overlay" id="savesModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalCloseBtn">✕</button>
+            <h2>📂 Сохранённые конфиги</h2>
+            <div id="savesList">
+                <div class="empty-saves">Нет сохранённых конфигураций</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // === 3D ЭФФЕКТ ЗА КУРСОРОМ ===
+            const scene = document.getElementById('scene3d');
+            const card = document.getElementById('gardenCard');
+            let targetRotateX = 0,
+                targetRotateY = 0;
+            let currentRotateX = 0,
+                currentRotateY = 0;
+
+            document.addEventListener('mousemove', (e) => {
+                const x = (e.clientX / window.innerWidth) * 2 - 1;
+                const y = -(e.clientY / window.innerHeight) * 2 + 1;
+                targetRotateY = x * 6;
+                targetRotateX = y * 5;
+            });
+
+            function update3D() {
+                currentRotateX += (targetRotateX - currentRotateX) * 0.08;
+                currentRotateY += (targetRotateY - currentRotateY) * 0.08;
+                scene.style.transform = `rotateX(${currentRotateX}deg) rotateY(${currentRotateY}deg)`;
+                card.style.transform =
+                    `rotateX(${-currentRotateX * 0.15}deg) rotateY(${-currentRotateY * 0.15}deg)`;
+                requestAnimationFrame(update3D);
+            }
+            update3D();
+
+            // === ЛОГИКА РУЛЕТКИ ===
+            let items = [];
+
+            const itemsGrid = document.getElementById('itemsGrid');
+            const itemNameInput = document.getElementById('itemName');
+            const imageUpload = document.getElementById('imageUpload');
+            const addBtn = document.getElementById('addBtn');
+            const spinBtn = document.getElementById('spinBtn');
+            const resultName = document.getElementById('resultName');
+            const resultImage = document.getElementById('resultImage');
+            const resultBox = document.getElementById('resultBox');
+
+            // === СОХРАНЕНИЯ ===
+            const configNameInput = document.getElementById('configNameInput');
+            const saveConfigBtn = document.getElementById('saveConfigBtn');
+            const showSavesBtn = document.getElementById('showSavesBtn');
+            const savesModal = document.getElementById('savesModal');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+            const savesList = document.getElementById('savesList');
+
+            // Загружаем сохранения из localStorage
+            function loadSaves() {
+                try {
+                    const data = localStorage.getItem('roulette_configs');
+                    return data ? JSON.parse(data) : {};
+                } catch {
+                    return {};
+                }
+            }
+
+            function saveSaves(saves) {
+                localStorage.setItem('roulette_configs', JSON.stringify(saves));
+            }
+
+            // Сохранить текущую конфигурацию
+            function saveCurrentConfig() {
+                if (items.length === 0) {
+                    alert('❌ Нет вариантов для сохранения! Добавьте хотя бы один вариант.');
+                    return;
+                }
+
+                const name = configNameInput.value.trim() || 'Без названия';
+                const saves = loadSaves();
+
+                // Проверяем, есть ли уже конфиг с таким именем
+                if (saves[name]) {
+                    if (!confirm(`Конфиг "${name}" уже существует. Перезаписать?`)) {
+                        return;
+                    }
+                }
+
+                // Сохраняем глубокую копию items (с изображениями в base64)
+                saves[name] = items.map(item => ({
+                    name: item.name,
+                    imageSrc: item.imageSrc
+                }));
+
+                saveSaves(saves);
+                alert(`✅ Конфиг "${name}" сохранён! (${items.length} вариантов)`);
+                renderSavesList();
+            }
+
+            // Загрузить конфигурацию по имени
+            function loadConfig(name) {
+                const saves = loadSaves();
+                const config = saves[name];
+                if (!config) {
+                    alert(`❌ Конфиг "${name}" не найден!`);
+                    return;
+                }
+
+                if (items.length > 0) {
+                    if (!confirm(`⚠️ Загрузка "${name}" заменит текущие варианты. Продолжить?`)) {
+                        return;
+                    }
+                }
+
+                items = config.map(item => ({
+                    name: item.name,
+                    imageSrc: item.imageSrc
+                }));
+
+                renderItems();
+                if (items.length > 0) {
+                    resultName.textContent = items[0].name;
+                    resultImage.src = items[0].imageSrc || '';
+                    resultImage.style.display = 'inline-block';
+                } else {
+                    resultName.textContent = 'Ожидание';
+                    resultImage.style.display = 'none';
+                    resultImage.src = '';
+                }
+                resultBox.classList.remove('win-animation');
+
+                // Закрываем модалку
+                savesModal.classList.remove('active');
+                configNameInput.value = name;
+            }
+
+            // Удалить конфиг
+            function deleteConfig(name) {
+                if (!confirm(`🗑️ Удалить конфиг "${name}"?`)) return;
+                const saves = loadSaves();
+                delete saves[name];
+                saveSaves(saves);
+                renderSavesList();
+            }
+
+            // Отрисовать список сохранений в модалке
+            function renderSavesList() {
+                const saves = loadSaves();
+                const names = Object.keys(saves);
+
+                if (names.length === 0) {
+                    savesList.innerHTML = `<div class="empty-saves">📭 Нет сохранённых конфигураций</div>`;
+                    return;
+                }
+
+                let html = '';
+                names.forEach(name => {
+                    const count = saves[name].length;
+                    html += `
+                        <div class="saved-item">
+                            <div class="info">
+                                <span>${name}</span>
+                                <span class="count">${count} вариантов</span>
+                            </div>
+                            <div class="actions">
+                                <button class="btn-load" data-name="${name}">📂 Загрузить</button>
+                                <button class="btn-delete" data-name="${name}">✕</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                savesList.innerHTML = html;
+
+                // Вешаем события на кнопки
+                savesList.querySelectorAll('.btn-load').forEach(btn => {
+                    btn.addEventListener('click', () => loadConfig(btn.dataset.name));
+                });
+                savesList.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', () => deleteConfig(btn.dataset.name));
+                });
+            }
+
+            // === ОТРИСОВКА ЭЛЕМЕНТОВ ===
+            function renderItems() {
+                itemsGrid.innerHTML = '';
+                if (items.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'empty-message';
+                    empty.textContent = '🌻 Добавьте первый вариант';
+                    itemsGrid.appendChild(empty);
+                    return;
+                }
+
+                items.forEach((item, index) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'item-chip';
+
+                    const img = document.createElement('img');
+                    img.src = item.imageSrc ||
+                        'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'%3E%3Crect width=\'60\' height=\'60\' rx=\'30\' fill=\'%236ba85e\'/%3E%3Ctext x=\'18\' y=\'42\' font-size=\'36\' fill=\'%23f6ffe0\' font-family=\'sans-serif\'%3E🌱%3C/text%3E%3C/svg%3E';
+                    img.alt = item.name;
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = item.name;
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.textContent = '✕';
+                    removeBtn.setAttribute('aria-label', 'Удалить');
+                    removeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        items.splice(index, 1);
+                        renderItems();
+                        if (items.length === 0) {
+                            resultName.textContent = 'Ожидание';
+                            resultImage.style.display = 'none';
+                            resultImage.src = '';
+                            resultBox.classList.remove('win-animation');
+                        }
+                    });
+
+                    chip.appendChild(img);
+                    chip.appendChild(nameSpan);
+                    chip.appendChild(removeBtn);
+                    itemsGrid.appendChild(chip);
+                });
+            }
+
+            // === ДОБАВЛЕНИЕ ЭЛЕМЕНТА ===
+            function addItem() {
+                let name = itemNameInput.value.trim();
+                if (!name) name = 'Без названия';
+
+                const fileInput = imageUpload;
+                if (fileInput.files && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            items.push({ name: name, imageSrc: e.target.result });
+                            renderItems();
+                            fileInput.value = '';
+                            itemNameInput.value = '';
+                            itemNameInput.placeholder = 'Ещё вариант...';
+                        };
+                        reader.readAsDataURL(file);
+                        return;
+                    } else {
+                        alert('Пожалуйста, выберите изображение!');
+                        fileInput.value = '';
+                        return;
+                    }
+                } else {
+                    const defaultIcon =
+                        `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' rx='30' fill='%236ba85e'/%3E%3Ctext x='18' y='42' font-size='36' fill='%23f6ffe0' font-family='sans-serif'%3E${encodeURIComponent(name.charAt(0).toUpperCase())}%3C/text%3E%3C/svg%3E`;
+                    items.push({ name: name, imageSrc: defaultIcon });
+                    renderItems();
+                    itemNameInput.value = '';
+                    itemNameInput.placeholder = 'Ещё вариант...';
+                    fileInput.value = '';
+                }
+            }
+
+            addBtn.addEventListener('click', addItem);
+            itemNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addItem();
+                }
+            });
+
+            imageUpload.addEventListener('change', function() {
+                const label = document.getElementById('fileLabel');
+                if (this.files && this.files.length > 0) {
+                    label.textContent = `📸 ${this.files[0].name.substring(0, 18)}`;
+                } else {
+                    label.textContent = '📸 Выбрать фото';
+                }
+            });
+
+            // === ВРАЩЕНИЕ РУЛЕТКИ ===
+            function spinWheel() {
+                if (items.length === 0) {
+                    resultName.textContent = '❌ Нет вариантов';
+                    resultImage.style.display = 'none';
+                    resultBox.classList.remove('win-animation');
+                    return;
+                }
+
+                spinBtn.disabled = true;
+                spinBtn.textContent = '🌀 ...';
+                resultBox.classList.remove('win-animation');
+
+                let counter = 0;
+                const maxSteps = 14 + Math.floor(Math.random() * 10);
+                let intervalId = setInterval(() => {
+                    const randomIndex = Math.floor(Math.random() * items.length);
+                    const tempItem = items[randomIndex];
+                    resultName.textContent = tempItem.name;
+                    resultImage.src = tempItem.imageSrc || '';
+                    resultImage.style.display = 'inline-block';
+                    resultImage.alt = tempItem.name;
+
+                    counter++;
+                    if (counter >= maxSteps) {
+                        clearInterval(intervalId);
+                        const finalIndex = Math.floor(Math.random() * items.length);
+                        const chosen = items[finalIndex];
+                        resultName.textContent = chosen.name;
+                        resultImage.src = chosen.imageSrc || '';
+                        resultImage.style.display = 'inline-block';
+                        resultImage.alt = chosen.name;
+
+                        resultBox.classList.add('win-animation');
+                        setTimeout(() => {
+                            resultBox.classList.remove('win-animation');
+                        }, 1500);
+
+                        spinBtn.disabled = false;
+                        spinBtn.textContent = '🌀 КРУТИТЬ';
+                    }
+                }, 75);
+            }
+
+            spinBtn.addEventListener('click', spinWheel);
+
+            // === СОБЫТИЯ ДЛЯ СОХРАНЕНИЙ ===
+            saveConfigBtn.addEventListener('click', saveCurrentConfig);
+
+            showSavesBtn.addEventListener('click', () => {
+                renderSavesList();
+                savesModal.classList.add('active');
+            });
+
+            modalCloseBtn.addEventListener('click', () => {
+                savesModal.classList.remove('active');
+            });
+
+            savesModal.addEventListener('click', (e) => {
+                if (e.target === savesModal) {
+                    savesModal.classList.remove('active');
+                }
+            });
+
+            // Закрытие по Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    savesModal.classList.remove('active');
+                }
+            });
+
+            // === ИНИЦИАЛИЗАЦИЯ ===
+            function initDemo() {
+                const demo = [{
+                    name: '🌻 Подсолнух',
+                    imageSrc: 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'44\' fill=\'%23f7d44a\'/%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'30\' fill=\'%236b3f1b\'/%3E%3C/svg%3E'
+                }, {
+                    name: '🍓 Клубника',
+                    imageSrc: 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'44\' fill=\'%23e63535\'/%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'8\' fill=\'%23f5f5dc\'/%3E%3Ccircle cx=\'65\' cy=\'35\' r=\'7\' fill=\'%23f5f5dc\'/%3E%3C/svg%3E'
+                }, {
+                    name: '🥕 Морковь',
+                    imageSrc: 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect x=\'25\' y=\'20\' width=\'50\' height=\'55\' rx=\'20\' fill=\'%23f58a3a\'/%3E%3Crect x=\'38\' y=\'6\' width=\'24\' height=\'20\' rx=\'10\' fill=\'%234caf50\'/%3E%3C/svg%3E'
+                }];
+                items = demo.slice();
+                renderItems();
+                if (items.length) {
+                    resultName.textContent = items[0].name;
+                    resultImage.src = items[0].imageSrc;
+                    resultImage.style.display = 'inline-block';
+                }
+            }
+
+            initDemo();
+        })();
+    </script>
+</body>
+</html>
